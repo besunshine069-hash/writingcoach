@@ -1,11 +1,10 @@
 export default async function handler(req, res) {
   try {
     const { message, systemPrompt } = req.body;
-
     const apiKey = process.env.API_KEY;
 
     if (!apiKey) {
-      return res.status(500).json({ error: "API_KEY not configured on server." });
+      return res.status(500).json({ error: "API_KEY not configured." });
     }
 
     const response = await fetch(
@@ -23,14 +22,14 @@ export default async function handler(req, res) {
     );
 
     if (!response.ok) {
-      const errText = await response.text();
-      return res.status(response.status).json({ error: errText });
+      const errorText = await response.text();
+      return res.status(response.status).json({ error: errorText });
     }
 
     const data = await response.json();
     res.status(200).json(data);
-  } catch (err) {
-    console.error("API error:", err);
-    res.status(500).json({ error: "Internal server error" });
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    res.status(500).json({ error: "Internal server error." });
   }
 }
