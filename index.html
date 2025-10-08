@@ -1,90 +1,311 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Writing Coach</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {
-      font-family: "Poppins", sans-serif;
-      background: linear-gradient(135deg, #a8e6cf, #dcedc1, #ffd3b6, #ffaaa5);
-    }
-    .chat-container {
-      background-color: #fef9f8;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Writing Practice Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* All CSS styling remains the same */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #a8e6cf, #dcedc1, #ffd3b6, #ffaaa5);
+        }
+
+        .chat-container {
+            background-color: #fef9f8;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-messages::-webkit-scrollbar-track {
+            background: #fde2e4;
+            border-radius: 10px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #ffc2d1;
+            border-radius: 10px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #ffb3c6;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-bubble {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .ai-message .prose p {
+            margin: 0;
+        }
+         .ai-message .prose h3 {
+            margin-top: 0.75rem;
+            margin-bottom: 0.25rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #00796b; 
+        }
+        .dark .ai-message .prose h3 {
+             color: #80cbc4;
+        }
+
+        #submit-button svg {
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+        #submit-button:hover svg {
+            transform: translateX(3px) translateY(-3px) scale(1.1);
+            color: #fff;
+        }
+
+        .typing-dot {
+            animation: pulse 1.4s infinite;
+        }
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes pulse {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+        .gemini-action-btn {
+             background-color: #fff1e6;
+             border: 1px solid #ffd1a6;
+             color: #e67c00;
+             transition: all 0.2s ease-in-out;
+             font-weight: 500;
+        }
+         .gemini-action-btn:hover {
+             background-color: #ffe8d1;
+             transform: translateY(-2px);
+             box-shadow: 0 4px 10px rgba(230, 124, 0, 0.1);
+         }
+    </style>
 </head>
-
 <body class="flex flex-col items-center justify-center min-h-screen p-4">
-  <div class="w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col h-[95vh] chat-container">
-    <div class="p-5 border-b flex items-center justify-between rounded-t-2xl bg-white/70">
-      <h1 class="text-xl font-bold text-gray-700">AI Writing Coach</h1>
-    </div>
 
-    <div id="chat-messages" class="flex-grow p-6 space-y-6 overflow-y-auto bg-white/50">
-      <div class="flex items-start gap-3">
-        <div class="bg-teal-50 p-4 rounded-2xl shadow-md max-w-lg text-teal-800">
-          <p>Hello! I’m your Writing Coach. Send me your paragraph and I’ll help you improve it!</p>
+    <div class="w-full max-w-2xl bg-white/70 dark:bg-gray-800/80 rounded-2xl shadow-2xl flex flex-col h-[95vh] max-h-[800px] chat-container">
+        <!-- Header -->
+        <div class="p-5 border-b border-rose-200/50 flex items-center justify-between rounded-t-2xl">
+            <div class="flex items-center">
+                 <div class="p-3 bg-gradient-to-br from-pink-400 to-red-400 rounded-full shadow-lg">
+                    <svg class="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-8.4 8.4a5.25 5.25 0 00-1.32 2.214l-2.1 6.3c-.25.75.5 1.5.1.25.75l6.3-2.1a5.25 5.25 0 002.214-1.32l8.4-8.4z" /><path d="M5.25 5.25a3 3 0 00-3 3v10.5a3 3 0 003 3h10.5a3 3 0 003-3V13.5a.75.75 0 00-1.5 0v5.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V8.25a1.5 1.5 0 011.5-1.5h5.25a.75.75 0 000-1.5H5.25z" /></svg>
+                 </div>
+                 <h1 class="text-xl font-bold ml-4 text-gray-700 dark:text-white">Writing Coach</h1>
+            </div>
         </div>
-      </div>
+
+        <!-- Chat Messages -->
+        <div id="chat-messages" class="flex-grow p-6 space-y-6 overflow-y-auto">
+            <!-- AI Welcome Message -->
+            <div class="flex items-start gap-3 message-bubble">
+                <div class="p-2 bg-white rounded-full flex-shrink-0 shadow-md">
+                   <svg class="w-7 h-7 text-pink-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.15l-2.11 3.165a.75.75 0 01-1.27.015L9.75 17.12a.39.39 0 00-.297-.15 48.817 48.817 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97zM6.75 8.25a.75.75 0 01.75-.75h9a.75.75 0 010 1.5h-9a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5h3a.75.75 0 000-1.5h-3z" clip-rule="evenodd" /></svg>
+                </div>
+                <div class="bg-teal-50 dark:bg-teal-900/50 p-4 rounded-2xl rounded-tl-none shadow-md max-w-lg text-teal-800 dark:text-teal-100">
+                    <p class="text-sm font-medium">
+                        Hi there! I'm your Writing Coach. Share a paragraph with me and let's write something amazing!
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Typing Indicator -->
+        <div id="typing-indicator" class="px-6 pb-2 hidden">
+             <div class="flex items-start gap-3">
+                 <div class="p-2 bg-white rounded-full flex-shrink-0 shadow-md">
+                   <svg class="w-7 h-7 text-pink-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.15l-2.11 3.165a.75.75 0 01-1.27.015L9.75 17.12a.39.39 0 00-.297-.15 48.817 48.817 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97zM6.75 8.25a.75.75 0 01.75-.75h9a.75.75 0 010 1.5h-9a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5h3a.75.75 0 000-1.5h-3z" clip-rule="evenodd" /></svg>
+                </div>
+                 <div class="bg-teal-50 dark:bg-teal-900/50 p-4 rounded-2xl rounded-tl-none shadow-md">
+                     <div class="flex items-center justify-center space-x-2">
+                        <div class="w-2.5 h-2.5 bg-teal-300 rounded-full typing-dot"></div>
+                        <div class="w-2.5 h-2.5 bg-teal-300 rounded-full typing-dot"></div>
+                        <div class="w-2.5 h-2.5 bg-teal-300 rounded-full typing-dot"></div>
+                    </div>
+                 </div>
+             </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-4 mt-auto rounded-b-2xl">
+            <form id="chat-form" class="flex items-center gap-3">
+                <textarea id="message-input" type="text" placeholder="Write something..." class="flex-grow p-4 bg-white/80 dark:bg-gray-700/50 text-gray-800 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-400 resize-none shadow-inner" rows="1" oninput="autoGrow(this)"></textarea>
+                <button id="submit-button" type="submit" class="bg-gradient-to-br from-pink-400 to-red-400 text-white/90 p-3.5 rounded-full hover:shadow-lg hover:shadow-pink-200 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-pink-300 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" /></svg>
+                </button>
+            </form>
+        </div>
     </div>
 
-    <div class="p-4 mt-auto rounded-b-2xl bg-white/70">
-      <form id="chat-form" class="flex items-center gap-3">
-        <textarea id="message-input" placeholder="Write something..." class="flex-grow p-4 bg-white text-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-400 resize-none shadow-inner" rows="1"></textarea>
-        <button id="submit-button" type="submit" class="bg-gradient-to-br from-pink-400 to-red-400 text-white p-3.5 rounded-full hover:shadow-lg transition-all duration-300">
-          <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" /></svg>
-        </button>
-      </form>
-    </div>
-  </div>
+    <script>
+        // --- All DOM element selections remain the same ---
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const submitButton = document.getElementById('submit-button');
 
-  <script>
-    const chatForm = document.getElementById("chat-form");
-    const messageInput = document.getElementById("message-input");
-    const chatMessages = document.getElementById("chat-messages");
+        let lastUserMessage = '';
 
-    const systemPrompt = `You are an expert AI English Writing Coach...`;
+        // --- System prompt remains the same ---
+        const systemPrompt = `You are an expert AI English Writing Coach. Your goal is to provide comprehensive, constructive feedback to help learners improve their English writing skills. When a user submits a paragraph, you MUST provide the following in your feedback, using markdown for clear structure:
 
-    chatForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const message = messageInput.value.trim();
-      if (!message) return;
+1.  **### Overall Feedback:** Start with a brief, encouraging summary of the user's paragraph.
+2.  **### Grammar & Clarity:** Point out specific areas for improvement in grammar, punctuation, and sentence structure.
+3.  **### Suggestions for Improvement:** Offer concrete suggestions on how to make the paragraph stronger or more descriptive.
+4.  **### Related Vocabulary:** Suggest 3-4 relevant vocabulary words with brief definitions that could enhance the paragraph's topic.
+5.  **### Estimated IELTS Band:** Provide an estimated IELTS writing band score for the paragraph (e.g., 5.5-6.0). Add a clear disclaimer that this is an approximation for practice purposes only.
+6.  **### Keep it up!** End with a short, positive, and encouraging remark.
 
-      addMessage(message, "user");
-      messageInput.value = "";
-      await getAIResponse(message);
-    });
+Your tone should always be friendly, supportive, and motivational.`;
 
-    function addMessage(text, sender) {
-      const msg = document.createElement("div");
-      msg.classList.add("flex", "items-start", "gap-3");
-      if (sender === "user") {
-        msg.innerHTML = `<div class="ml-auto bg-gradient-to-br from-amber-300 to-orange-400 text-white p-4 rounded-2xl rounded-br-none shadow-md max-w-lg"><p>${text}</p></div>`;
-      } else {
-        msg.innerHTML = `<div class="bg-teal-50 p-4 rounded-2xl shadow-md max-w-lg text-teal-800"><p>${text}</p></div>`;
-      }
-      chatMessages.appendChild(msg);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    async function getAIResponse(message) {
-      try {
-        const res = await fetch("/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message, systemPrompt }),
+        // --- Event listeners remain the same ---
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            const message = messageInput.value.trim();
+            if (!message) return;
+            lastUserMessage = message; 
+            addMessageToUI(message, 'user');
+            messageInput.value = '';
+            autoGrow(messageInput);
+            setFormDisabled(true);
+            await getAIResponse(message, 'feedback');
+        });
+        
+        chatMessages.addEventListener('click', async (e) => {
+            const button = e.target.closest('.gemini-action-btn');
+            if (!button) return;
+            e.target.closest('.gemini-actions').innerHTML = `<p class="text-xs text-center text-gray-500 italic">Generating...</p>`;
+            const action = button.dataset.action;
+            const text = button.dataset.text;
+            await getAIResponse(text, action);
         });
 
-        const data = await res.json();
-        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response.";
-        addMessage(reply, "ai");
-      } catch (error) {
-        addMessage("Error connecting to AI server.", "ai");
-      }
-    }
-  </script>
+        // --- UI functions remain the same ---
+        function addMessageToUI(message, sender, isError = false, addActions = false) {
+            const messageContainer = document.createElement('div');
+            
+            if (sender === 'user') {
+                messageContainer.innerHTML = `
+                    <div class="flex items-start gap-3 justify-end message-bubble">
+                        <div class="bg-gradient-to-br from-amber-300 to-orange-400 text-white p-4 rounded-2xl rounded-br-none shadow-md max-w-lg">
+                            <p class="text-sm font-medium">${message.replace(/\n/g, '<br>')}</p>
+                        </div>
+                         <div class="p-2 bg-white rounded-full flex-shrink-0 shadow-md">
+                            <svg class="w-7 h-7 text-amber-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0021.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 003.065 7.097A9.716 9.716 0 0012 21.75a9.716 9.716 0 006.685-2.653zm-12.54-1.285A7.486 7.486 0 0112 15a7.486 7.486 0 015.855 2.812A8.224 8.224 0 0112 20.25a8.224 8.224 0 01-5.855-2.438zM15.75 9a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" clip-rule="evenodd" /></svg>
+                        </div>
+                    </div>
+                `;
+            } else { // AI message
+                const bgColor = isError ? 'bg-red-100 dark:bg-red-800/50' : 'bg-teal-50 dark:bg-teal-900/50';
+                const textColor = isError ? 'text-red-800 dark:text-red-100' : 'text-teal-800 dark:text-teal-100';
+                const iconColor = isError ? 'text-red-500' : 'text-pink-400';
+
+                 let actionButtons = '';
+                 if (addActions && !isError) {
+                     setFormDisabled(false); 
+                     actionButtons = `
+                        <div class="gemini-actions mt-4 pt-3 border-t border-teal-100 dark:border-teal-800 flex flex-col sm:flex-row gap-2">
+                             <button class="flex-1 text-sm p-2 rounded-lg gemini-action-btn" data-action="continue" data-text="${lastUserMessage.replace(/"/g, '&quot;')}">✏️ Continue Writing</button>
+                             <button class="flex-1 text-sm p-2 rounded-lg gemini-action-btn" data-action="rephrase" data-text="${lastUserMessage.replace(/"/g, '&quot;')}">🎨 Rephrase This</button>
+                        </div>
+                     `;
+                 } else {
+                     setFormDisabled(false);
+                 }
+
+
+                messageContainer.innerHTML = `
+                    <div class="flex items-start gap-3 message-bubble">
+                        <div class="p-2 bg-white rounded-full flex-shrink-0 shadow-md">
+                            <svg class="w-7 h-7 ${iconColor}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.15l-2.11 3.165a.75.75 0 01-1.27.015L9.75 17.12a.39.39 0 00-.297-.15 48.817 48.817 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97zM6.75 8.25a.75.75 0 01.75-.75h9a.75.75 0 010 1.5h-9a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5h3a.75.75 0 000-1.5h-3z" clip-rule="evenodd" /></svg>
+                        </div>
+                        <div class="${bgColor} p-4 rounded-2xl rounded-tl-none shadow-md max-w-lg ai-message ${textColor}">
+                            <div class="prose prose-sm dark:prose-invert max-w-none font-medium">${formatMessage(message)}</div>
+                            ${actionButtons}
+                        </div>
+                    </div>
+                `;
+            }
+            chatMessages.appendChild(messageContainer);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function formatMessage(message) {
+            return message
+                .replace(/### (.*?)\n/g, '<h3>$1</h3>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/(\d\.)/g, '<br>$1') 
+                .replace(/^- /gm, '<br>• ') 
+                .replace(/\n/g, '<br>');
+        }
+        
+        function autoGrow(element) {
+            element.style.height = "5px";
+            element.style.height = (element.scrollHeight) + "px";
+        }
+
+        function setFormDisabled(isDisabled) {
+            messageInput.disabled = isDisabled;
+            submitButton.disabled = isDisabled;
+        }
+
+        // --- getAIResponse and callGeminiAPI are now different ---
+        async function getAIResponse(text, action) {
+             typingIndicator.classList.remove('hidden');
+             chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                // Call our own backend, not Google's API directly
+                const aiResponse = await callBackendAPI(text, action);
+                addMessageToUI(aiResponse, 'ai', false, action === 'feedback');
+            } catch (error) {
+                console.error("Error calling backend API:", error);
+                addMessageToUI("Oh no! My connection to the brain seems to be down. Please try again in a moment.", 'ai', true);
+            } finally {
+                typingIndicator.classList.add('hidden');
+                 if (action !== 'feedback') {
+                    setFormDisabled(false);
+                 }
+            }
+        }
+        
+        async function callBackendAPI(prompt, action) {
+            // This function now calls our own server endpoint.
+            // On a real server, the URL would be something like 'https://your-app-name.vercel.app/api/chat'
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt, action }) // Send the prompt and action type
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.text();
+                throw new Error(`Backend API request failed with status ${response.status}: ${errorBody}`);
+            }
+
+            const result = await response.json();
+            return result.text;
+        }
+
+    </script>
 </body>
 </html>
+
